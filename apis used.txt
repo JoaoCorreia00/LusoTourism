@@ -1,0 +1,40 @@
+Empreendimentos Turísticos Existentes
+
+NrRNET - Used 
+Denominacao - Used
+TipologiaET - Used
+Categoria - Used
+NrUnidAloj - Used
+NrCamasFixas - Used
+NrQuartos - Used
+NrSuites - Used
+NrApart - Used
+NrMoradias - Used
+NrCampistas - Used
+IntegraCT - Used
+DesignacaoCT - Used
+CampoGolfe - Used
+SalasReunioes - Used
+CapacSalasReunioes - Used
+SPA - Used
+OutrosEquip - Used
+DataTituloValAbert  - Used
+Website - Used
+Email - Used
+Endereco - Used
+Concelho - Used
+Distrito - Used
+SeloCleanSafe - Used
+
+Estabelecimentos de Alojamento Local
+
+NrRNAL - Used
+Denominacao - Used
+DataAberturaPublico - Used
+Modalidade - Used
+NrUtentes - Used
+Email - Used
+Endereco - Used
+Concelho - Used
+Distrito - Used
+SeloCleanSafe - Used
