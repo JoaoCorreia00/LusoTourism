@@ -10,7 +10,7 @@
       </div>
       <div id="Navbardiv">
         <router-link to="/accommodations">Acomodações</router-link>
-        <router-link to="/">Naughtic School</router-link>
+        <router-link to="/casinos">Casinos</router-link>
         <router-link to="/">Surf Spots</router-link>
         <router-link to="/">English</router-link>
       </div>
@@ -27,7 +27,7 @@
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     z-index: 1000;
-    width: 100%;
+    width: 100vw;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     border-bottom: 1px solid #e0e0e0;
   }
