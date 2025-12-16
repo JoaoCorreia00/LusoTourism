@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
 // Utility function to chunk arrays
 function chunkArray<T>(array: T[], size: number): T[][] {
@@ -10,9 +10,13 @@ function chunkArray<T>(array: T[], size: number): T[][] {
 const casinoCurrentSlide = ref(0)
 const bingoCurrentSlide = ref(0)
 
+// Container refs
+const casinoContainer = ref<HTMLElement>()
+const bingoContainer = ref<HTMLElement>()
+
 // Responsive cards per slide
-const casinoSlides = computed(() => chunkArray(casinos, getCardsPerSlide()))
-const bingoSlides = computed(() => chunkArray(bingos, getCardsPerSlide()))
+const casinoSlides = computed(() => chunkArray(casinos, getCardsPerSlide(casinoContainer.value)))
+const bingoSlides = computed(() => chunkArray(bingos, getCardsPerSlide(bingoContainer.value)))
 
 // Navigation functions
 const navigate = (slidesLength: number, direction: number, currentIndex: number) =>
@@ -31,29 +35,54 @@ const bingoPrev = () => {
   bingoCurrentSlide.value = navigate(bingoSlides.value.length, -1, bingoCurrentSlide.value)
 }
 
-function getCardsPerSlide() {
-  if (window.innerWidth >= 1024) return 4
-  if (window.innerWidth >= 768) return 2
-  return 1
+function getCardsPerSlide(container: HTMLElement | undefined): number {
+  if (!container) return 4 // fallback
+
+  const containerWidth = container.clientWidth - 60
+  const cardWidth = 390 // card width + some padding + gap
+  const calculated = Math.floor(containerWidth / cardWidth)
+
+  if(calculated < 1) return 1
+  return calculated
 }
+
+// Update slides on resize
+let resizeTimeout: number
+const updateSlides = () => {
+  // Debounce resize events
+  clearTimeout(resizeTimeout)
+  resizeTimeout = window.setTimeout(() => {
+    // Force recomputation by triggering reactivity
+    casinoSlides.value
+    bingoSlides.value
+  }, 100)
+}
+
+onMounted(() => {
+  window.addEventListener('resize', updateSlides)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateSlides)
+  clearTimeout(resizeTimeout)
+})
 
 // Sample data representing casino and bingo venues
 const casinos = [
-  { denominacao: 'Luzeiro Casino', lotacao: 500, maquinas: 200, jogosBancados: true, salaEspetaculos: true, salaReunioesCongressos: true, restaurantes: 2, bares: 1, website: 'https://example1.com', endereco: 'Rua 1, 1000', localidadeCP: 'Lisboa, 1000-001', freguesia: 'Belém', concelho: 'Lisboa', distrito: 'Lisboa' },
-  { denominacao: 'Oura Casino', lotacao: 300, maquinas: 150, jogosBancados: false, salaEspetaculos: true, salaReunioesCongressos: false, restaurantes: 1, bares: 0, website: 'https://example2.com', endereco: 'Avenida 2, 2000', localidadeCP: 'Porto, 2000-002', freguesia: 'Cedofeita', concelho: 'Porto', distrito: 'Porto' },
-  { denominacao: 'Royal Casino', lotacao: 400, maquinas: 180, jogosBancados: true, salaEspetaculos: false, salaReunioesCongressos: true, restaurantes: 3, bares: 2, website: 'https://example3.com', endereco: 'Praça 3, 3000', localidadeCP: 'Faro, 3000-003', freguesia: 'Sé', concelho: 'Faro', distrito: 'Faro' },
-  { denominacao: 'Royal Casino', lotacao: 400, maquinas: 180, jogosBancados: true, salaEspetaculos: false, salaReunioesCongressos: true, restaurantes: 3, bares: 2, website: 'https://example3.com', endereco: 'Praça 3, 3000', localidadeCP: 'Faro, 3000-003', freguesia: 'Sé', concelho: 'Faro', distrito: 'Faro' },
-  { denominacao: 'Royal Casino', lotacao: 400, maquinas: 180, jogosBancados: true, salaEspetaculos: false, salaReunioesCongressos: true, restaurantes: 3, bares: 2, website: 'https://example3.com', endereco: 'Praça 3, 3000', localidadeCP: 'Faro, 3000-003', freguesia: 'Sé', concelho: 'Faro', distrito: 'Faro' },
-  { denominacao: 'Royal Casino', lotacao: 400, maquinas: 180, jogosBancados: true, salaEspetaculos: false, salaReunioesCongressos: true, restaurantes: 3, bares: 2, website: 'https://example3.com', endereco: 'Praça 3, 3000', localidadeCP: 'Faro, 3000-003', freguesia: 'Sé', concelho: 'Faro', distrito: 'Faro' },
-  { denominacao: 'Royal Casino', lotacao: 400, maquinas: 180, jogosBancados: true, salaEspetaculos: false, salaReunioesCongressos: true, restaurantes: 3, bares: 2, website: 'https://example3.com', endereco: 'Praça 3, 3000', localidadeCP: 'Faro, 3000-003', freguesia: 'Sé', concelho: 'Faro', distrito: 'Faro' },
+  { id: 1, denominacao: 'Luzeiro Casino', lotacao: 500, maquinas: 200, jogosBancados: true, salaEspetaculos: true, salaReunioesCongressos: true, restaurantes: 2, bares: 1, website: 'https://example1.com', endereco: 'Rua 1, 1000', localidadeCP: 'Lisboa, 1000-001', freguesia: 'Belém', concelho: 'Lisboa', distrito: 'Lisboa' },
+  { id: 2, denominacao: 'Oura Casino', lotacao: 300, maquinas: 150, jogosBancados: false, salaEspetaculos: true, salaReunioesCongressos: false, restaurantes: 1, bares: 0, website: 'https://example2.com', endereco: 'Avenida 2, 2000', localidadeCP: 'Porto, 2000-002', freguesia: 'Cedofeita', concelho: 'Porto', distrito: 'Porto' },
+  { id: 3, denominacao: 'Royal Casino', lotacao: 400, maquinas: 180, jogosBancados: true, salaEspetaculos: false, salaReunioesCongressos: true, restaurantes: 3, bares: 2, website: 'https://example3.com', endereco: 'Praça 3, 3000', localidadeCP: 'Faro, 3000-003', freguesia: 'Sé', concelho: 'Faro', distrito: 'Faro' },
+  { id: 4, denominacao: 'Vila Praia Casino', lotacao: 350, maquinas: 120, jogosBancados: false, salaEspetaculos: true, salaReunioesCongressos: false, restaurantes: 2, bares: 1, website: 'https://example4.com', endereco: 'Rua 4, 4000', localidadeCP: 'Albufeira, 4000-004', freguesia: 'Albufeira', concelho: 'Albufeira', distrito: 'Faro' },
+  { id: 5, denominacao: 'Casino Estoril', lotacao: 600, maquinas: 250, jogosBancados: true, salaEspetaculos: true, salaReunioesCongressos: true, restaurantes: 4, bares: 3, website: 'https://example5.com', endereco: 'Av 5, 5000', localidadeCP: 'Estoril, 5000-005', freguesia: 'Cascais', concelho: 'Cascais', distrito: 'Lisboa' },
+  { id: 6, denominacao: 'Casino da Madeira', lotacao: 450, maquinas: 190, jogosBancados: true, salaEspetaculos: false, salaReunioesCongressos: true, restaurantes: 3, bares: 2, website: 'https://example6.com', endereco: 'Praça 6, 6000', localidadeCP: 'Funchal, 6000-006', freguesia: 'Funchal', concelho: 'Funchal', distrito: 'Madeira' },
+  { id: 7, denominacao: 'Casino do Algarve', lotacao: 320, maquinas: 140, jogosBancados: false, salaEspetaculos: true, salaReunioesCongressos: false, restaurantes: 1, bares: 1, website: 'https://example7.com', endereco: 'Rua 7, 7000', localidadeCP: 'Tavira, 7000-007', freguesia: 'Tavira', concelho: 'Tavira', distrito: 'Faro' },
 ]
 
 const bingos = [
-  { denominacao: 'Central Bingo', lotacao: 200, salaEspetaculos: true, restaurantes: 1, bares: 0, website: 'https://bingo1.com', endereco: 'Rua 4, 4000', localidadeCP: 'Lisboa, 4000-004', freguesia: 'Misericórdia', concelho: 'Lisboa', distrito: 'Lisboa' },
-  { denominacao: 'Porto Bingo', lotacao: 150, salaEspetaculos: false, restaurantes: 0, bares: 1, website: 'https://bingo2.com', endereco: 'Av 5, 5000', localidadeCP: 'Porto, 5000-005', freguesia: 'Paranhos', concelho: 'Porto', distrito: 'Porto' },
-  { denominacao: 'Algarve Bingo', lotacao: 100, salaEspetaculos: true, restaurantes: 1, bares: 1, website: 'https://bingo3.com', endereco: 'Praça 6, 6000', localidadeCP: 'Faro, 6000-006', freguesia: 'Monte Gordo', concelho: 'Monte Gordo', distrito: 'Faro' }
+  { id: 1, denominacao: 'Central Bingo', lotacao: 200, salaEspetaculos: true, restaurantes: 1, bares: 0, website: 'https://bingo1.com', endereco: 'Rua 4, 4000', localidadeCP: 'Lisboa, 4000-004', freguesia: 'Misericórdia', concelho: 'Lisboa', distrito: 'Lisboa' },
+  { id: 2, denominacao: 'Porto Bingo', lotacao: 150, salaEspetaculos: false, restaurantes: 0, bares: 1, website: 'https://bingo2.com', endereco: 'Av 5, 5000', localidadeCP: 'Porto, 5000-005', freguesia: 'Paranhos', concelho: 'Porto', distrito: 'Porto' },
+  { id: 3, denominacao: 'Algarve Bingo', lotacao: 100, salaEspetaculos: true, restaurantes: 1, bares: 1, website: 'https://bingo3.com', endereco: 'Praça 6, 6000', localidadeCP: 'Faro, 6000-006', freguesia: 'Monte Gordo', concelho: 'Monte Gordo', distrito: 'Faro' }
 ]
-
 </script>
 
 <template>
@@ -92,11 +121,11 @@ const bingos = [
       </header>
 
       <div class="carousel-wrapper">
-        <div class="carousel-container">
+        <div class="carousel-container" ref="casinoContainer">
           <div class="carousel" :style="{ transform: `translateX(-${casinoCurrentSlide * 100}%)` }">
             <div v-for="(slide, slideIndex) in casinoSlides" :key="slideIndex" class="slide">
               <div class="items-grid">
-                <article v-for="casino in slide" :key="casino.denominacao" class="venue-card">
+                <article v-for="casino in slide" :key="casino.id" class="venue-card">
                   <div class="card-image">
                     <img :src="'/src/assets/Img_slider_1.jpg'" :alt="casino.denominacao">
                     <div class="card-overlay">
@@ -149,11 +178,11 @@ const bingos = [
       </header>
 
       <div class="carousel-wrapper">
-        <div class="carousel-container">
+        <div class="carousel-container" ref="bingoContainer">
           <div class="carousel" :style="{ transform: `translateX(-${bingoCurrentSlide * 100}%)` }">
             <div v-for="(slide, slideIndex) in bingoSlides" :key="slideIndex" class="slide">
               <div class="items-grid">
-                <article v-for="bingo in slide" :key="bingo.denominacao" class="venue-card">
+                <article v-for="bingo in slide" :key="bingo.id" class="venue-card">
                   <div class="card-image">
                     <img :src="'/src/assets/Img_slider_1.jpg'" :alt="bingo.denominacao">
                     <div class="card-overlay">
@@ -325,16 +354,19 @@ const bingos = [
 .carousel-wrapper {
   position: relative;
   margin-top: 2rem;
+  display: flex;
+  justify-content: center;
 }
 
 .carousel-container {
   position: relative;
-  width: 100%;
+  width: 94%;
   overflow: hidden;
   border-radius: 8px;
   background: white;
   border: 1px solid #e0e0e0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 0 25px;
 }
 
 .carousel {
@@ -348,11 +380,6 @@ const bingos = [
   display: flex;
   justify-content: center;
   padding: 2rem 0;
-}
-
-.grid {
-  display: flex;
-  gap: 2rem;
 }
 
 .items-grid {
@@ -552,111 +579,4 @@ const bingos = [
   background: #16a3fc;
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .section-title {
-    font-size: 1.8rem;
-  }
-
-  .slide {
-    padding: 1.5rem;
-  }
-
-  .venue-card {
-    flex: 0 0 320px;
-  }
-}
-
-@media (max-width: 768px) {
-  .pageLink {
-    width: 90%;
-  }
-
-  .hero {
-    padding: 3rem 1rem;
-  }
-
-  .hero-title {
-    font-size: 2rem;
-  }
-
-  .hero-stats {
-    gap: 2rem;
-  }
-
-  .stat {
-    padding: 1rem;
-  }
-
-  .stat-number {
-    font-size: 2rem;
-  }
-
-  .venue-section {
-    width: 90%;
-  }
-
-  .section-header {
-    margin-bottom: 1.5rem;
-  }
-
-  .section-title {
-    font-size: 1.6rem;
-  }
-
-  .section-description {
-    font-size: 1rem;
-  }
-
-  .slide {
-    padding: 1rem;
-  }
-
-  .items-grid {
-    gap: 1rem;
-  }
-
-  .venue-card {
-    flex: 0 0 100%;
-    max-width: 350px;
-  }
-
-  .nav-btn {
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
-  }
-
-  .nav-prev { left: 10px; }
-  .nav-next { right: 10px; }
-
-  .carousel-indicators {
-    bottom: 15px;
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-stats {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .stat {
-    width: 100%;
-    max-width: 200px;
-  }
-
-  .venue-card {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
-
-  .card-content {
-    padding: 1rem;
-  }
-
-  .venue-name {
-    font-size: 1.1rem;
-  }
-}
 </style>
