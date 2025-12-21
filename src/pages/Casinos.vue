@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { fetchCasinos, type Casino } from '../services/casinos'
 
 // Utility function to chunk arrays
 function chunkArray<T>(array: T[], size: number): T[][] {
@@ -15,8 +16,8 @@ const casinoContainer = ref<HTMLElement>()
 const bingoContainer = ref<HTMLElement>()
 
 // Responsive cards per slide
-const casinoSlides = computed(() => chunkArray(casinos, getCardsPerSlide(casinoContainer.value)))
-const bingoSlides = computed(() => chunkArray(bingos, getCardsPerSlide(bingoContainer.value)))
+const casinoSlides = computed(() => chunkArray(casinos.value, getCardsPerSlide(casinoContainer.value)))
+const bingoSlides = computed(() => chunkArray(bingos.value, getCardsPerSlide(bingoContainer.value)))
 
 // Navigation functions
 const navigate = (slidesLength: number, direction: number, currentIndex: number) =>
@@ -58,8 +59,9 @@ const updateSlides = () => {
   }, 100)
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('resize', updateSlides)
+  await loadCasinos()
 })
 
 onBeforeUnmount(() => {
@@ -67,22 +69,43 @@ onBeforeUnmount(() => {
   clearTimeout(resizeTimeout)
 })
 
-// Sample data representing casino and bingo venues
-const casinos = [
-  { id: 1, denominacao: 'Luzeiro Casino', lotacao: 500, maquinas: 200, jogosBancados: true, salaEspetaculos: true, salaReunioesCongressos: true, restaurantes: 2, bares: 1, website: 'https://example1.com', endereco: 'Rua 1, 1000', localidadeCP: 'Lisboa, 1000-001', freguesia: 'Belém', concelho: 'Lisboa', distrito: 'Lisboa' },
-  { id: 2, denominacao: 'Oura Casino', lotacao: 300, maquinas: 150, jogosBancados: false, salaEspetaculos: true, salaReunioesCongressos: false, restaurantes: 1, bares: 0, website: 'https://example2.com', endereco: 'Avenida 2, 2000', localidadeCP: 'Porto, 2000-002', freguesia: 'Cedofeita', concelho: 'Porto', distrito: 'Porto' },
-  { id: 3, denominacao: 'Royal Casino', lotacao: 400, maquinas: 180, jogosBancados: true, salaEspetaculos: false, salaReunioesCongressos: true, restaurantes: 3, bares: 2, website: 'https://example3.com', endereco: 'Praça 3, 3000', localidadeCP: 'Faro, 3000-003', freguesia: 'Sé', concelho: 'Faro', distrito: 'Faro' },
-  { id: 4, denominacao: 'Vila Praia Casino', lotacao: 350, maquinas: 120, jogosBancados: false, salaEspetaculos: true, salaReunioesCongressos: false, restaurantes: 2, bares: 1, website: 'https://example4.com', endereco: 'Rua 4, 4000', localidadeCP: 'Albufeira, 4000-004', freguesia: 'Albufeira', concelho: 'Albufeira', distrito: 'Faro' },
-  { id: 5, denominacao: 'Casino Estoril', lotacao: 600, maquinas: 250, jogosBancados: true, salaEspetaculos: true, salaReunioesCongressos: true, restaurantes: 4, bares: 3, website: 'https://example5.com', endereco: 'Av 5, 5000', localidadeCP: 'Estoril, 5000-005', freguesia: 'Cascais', concelho: 'Cascais', distrito: 'Lisboa' },
-  { id: 6, denominacao: 'Casino da Madeira', lotacao: 450, maquinas: 190, jogosBancados: true, salaEspetaculos: false, salaReunioesCongressos: true, restaurantes: 3, bares: 2, website: 'https://example6.com', endereco: 'Praça 6, 6000', localidadeCP: 'Funchal, 6000-006', freguesia: 'Funchal', concelho: 'Funchal', distrito: 'Madeira' },
-  { id: 7, denominacao: 'Casino do Algarve', lotacao: 320, maquinas: 140, jogosBancados: false, salaEspetaculos: true, salaReunioesCongressos: false, restaurantes: 1, bares: 1, website: 'https://example7.com', endereco: 'Rua 7, 7000', localidadeCP: 'Tavira, 7000-007', freguesia: 'Tavira', concelho: 'Tavira', distrito: 'Faro' },
-]
-
-const bingos = [
+// Reactive data
+const casinos = ref<Casino[]>([])
+const bingos = ref([
   { id: 1, denominacao: 'Central Bingo', lotacao: 200, salaEspetaculos: true, restaurantes: 1, bares: 0, website: 'https://bingo1.com', endereco: 'Rua 4, 4000', localidadeCP: 'Lisboa, 4000-004', freguesia: 'Misericórdia', concelho: 'Lisboa', distrito: 'Lisboa' },
   { id: 2, denominacao: 'Porto Bingo', lotacao: 150, salaEspetaculos: false, restaurantes: 0, bares: 1, website: 'https://bingo2.com', endereco: 'Av 5, 5000', localidadeCP: 'Porto, 5000-005', freguesia: 'Paranhos', concelho: 'Porto', distrito: 'Porto' },
   { id: 3, denominacao: 'Algarve Bingo', lotacao: 100, salaEspetaculos: true, restaurantes: 1, bares: 1, website: 'https://bingo3.com', endereco: 'Praça 6, 6000', localidadeCP: 'Faro, 6000-006', freguesia: 'Monte Gordo', concelho: 'Monte Gordo', distrito: 'Faro' }
-]
+])
+
+// Loading and error states
+const loading = ref(false)
+const error = ref<string | null>(null)
+
+// Fetch casinos data
+const loadCasinos = async () => {
+  loading.value = true
+  error.value = null
+  try {
+    const resp = await fetchCasinos()
+    casinos.value = resp.features.map(item => ({
+      denominacao: item.attributes.Denominacao,
+      jogosBancados: item.attributes.JogosBancados,
+      salaEspetaculos: item.attributes.SalaEspetaculos,
+      salaReunioesCongressos: item.attributes.SalaReunioesCongressos,
+      restaurantes: item.attributes.Restaurantes,
+      bares: item.attributes.Bares,
+      website: item.attributes.Website.startsWith('http') ? item.attributes.Website : `https://${item.attributes.Website}`,
+      localidadeCP: item.attributes.LocalidadeCP,
+      concelho: item.attributes.Concelho,
+      distrito: item.attributes.Distrito,
+    }))
+  } catch (err) {
+    error.value = 'Failed to load casinos data'
+    console.error('Error loading casinos:', err)
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
@@ -99,7 +122,7 @@ const bingos = [
     <!-- Hero Section -->
     <section class="hero">
       <div class="hero-content">
-        <h2 class="hero-title">Discover premier gaming destinations across Portugal</h2>
+        <h2 class="hero-title">Descubra destinos de jogos de primeira classe em Portugal</h2>
         <div class="hero-stats">
           <div class="stat">
             <span class="stat-number">{{ casinos.length }}</span>
@@ -117,15 +140,27 @@ const bingos = [
     <section class="venue-section">
       <header class="section-header">
         <h2 class="section-title">Casinos</h2>
-        <p class="section-description">Experience world-class gaming entertainment</p>
+        <p class="section-description">Experimente entretenimento de jogos de classe mundial</p>
       </header>
 
-      <div class="carousel-wrapper">
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-container">
+        <p>Loading casinos...</p>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="error-container">
+        <p>{{ error }}</p>
+        <button @click="loadCasinos" class="retry-button">Try Again</button>
+      </div>
+
+      <!-- Casinos Content -->
+      <div v-else class="carousel-wrapper">
         <div class="carousel-container" ref="casinoContainer">
           <div class="carousel" :style="{ transform: `translateX(-${casinoCurrentSlide * 100}%)` }">
             <div v-for="(slide, slideIndex) in casinoSlides" :key="slideIndex" class="slide">
               <div class="items-grid">
-                <article v-for="casino in slide" :key="casino.id" class="venue-card">
+                <article v-for="casino in slide" class="venue-card">
                   <div class="card-image">
                     <img :src="'/src/assets/Img_slider_1.jpg'" :alt="casino.denominacao">
                     <div class="card-overlay">
@@ -136,20 +171,24 @@ const bingos = [
                     <h3 class="venue-name">{{ casino.denominacao }}</h3>
                     <div class="venue-location">
                       <span class="location-icon">📍</span>
-                      <span>{{ casino.concelho }}, {{ casino.distrito }}</span>
+                      <span v-if="casino.concelho">{{ casino.concelho }}, {{ casino.distrito }}</span>
+                      <span v-else>{{ casino.localidadeCP }}</span>
                     </div>
                     <div class="venue-features">
-                      <div class="feature-item">
-                        <strong>Capacity:</strong> {{ casino.lotacao }}
+                      <div class="games-section">
+                        <h4>Jogos Disponíveis</h4>
+                        <div class="games-tags">
+                          <span v-for="game in (casino.jogosBancados || '').split(',')" :key="game" class="game-tag">{{ game.trim() }}</span>
+                        </div>
                       </div>
-                      <div class="feature-item">
-                        <strong>Machines:</strong> {{ casino.maquinas }}
-                      </div>
-                      <div class="feature-item">
-                        <strong>Dining:</strong> {{ casino.restaurantes }} Restaurants
+                      <div class="facilities">
+                        <div v-if="casino.salaEspetaculos" class="facility-badge">Sala de Espetáculos</div>
+                        <div v-if="casino.salaReunioesCongressos" class="facility-badge">Sala de Reuniões</div>
+                        <div v-if="casino.restaurantes" class="facility-badge">Restaurantes</div>
+                        <div v-if="casino.bares" class="facility-badge">Bares</div>
                       </div>
                     </div>
-                    <a :href="casino.website" target="_blank" class="venue-button">View Details</a>
+                    <a :href="casino.website" target="_blank" class="venue-button">Ver Detalhes</a>
                   </div>
                 </article>
               </div>
@@ -174,7 +213,7 @@ const bingos = [
     <section class="venue-section">
       <header class="section-header">
         <h2 class="section-title">Bingos</h2>
-        <p class="section-description">Find traditional bingo halls and modern gaming venues</p>
+        <p class="section-description">Encontre salas de bingo tradicionais e locais de jogos modernos</p>
       </header>
 
       <div class="carousel-wrapper">
@@ -182,7 +221,7 @@ const bingos = [
           <div class="carousel" :style="{ transform: `translateX(-${bingoCurrentSlide * 100}%)` }">
             <div v-for="(slide, slideIndex) in bingoSlides" :key="slideIndex" class="slide">
               <div class="items-grid">
-                <article v-for="bingo in slide" :key="bingo.id" class="venue-card">
+                <article v-for="bingo in slide" class="venue-card">
                   <div class="card-image">
                     <img :src="'/src/assets/Img_slider_1.jpg'" :alt="bingo.denominacao">
                     <div class="card-overlay">
@@ -196,17 +235,17 @@ const bingos = [
                       <span>{{ bingo.concelho }}, {{ bingo.distrito }}</span>
                     </div>
                     <div class="venue-features">
-                      <div class="feature-item">
-                        <strong>Capacity:</strong> {{ bingo.lotacao }}
+                      <div class="capacity-section">
+                        <h4>Capacidade</h4>
+                        <span class="capacity-value">{{ bingo.lotacao }} pessoas</span>
                       </div>
-                      <div class="feature-item">
-                        <strong>Show Room:</strong> {{ bingo.salaEspetaculos ? 'Yes' : 'No' }}
-                      </div>
-                      <div class="feature-item">
-                        <strong>Dining:</strong> {{ bingo.restaurantes }} Restaurants
+                      <div class="facilities">
+                        <div v-if="bingo.salaEspetaculos" class="facility-badge">Sala de Espetáculos</div>
+                        <div v-if="bingo.restaurantes" class="facility-badge">Restaurantes</div>
+                        <div v-if="bingo.bares" class="facility-badge">Bares</div>
                       </div>
                     </div>
-                    <a :href="bingo.website" target="_blank" class="venue-button">View Details</a>
+                    <a :href="bingo.website" target="_blank" class="venue-button">Ver Detalhes</a>
                   </div>
                 </article>
               </div>
@@ -392,6 +431,9 @@ const bingos = [
 /* Venue Cards */
 .venue-card {
   flex: 0 0 360px;
+  height: 550px;
+  display: flex;
+  flex-direction: column;
   background: white;
   border-radius: 8px;
   overflow: hidden;
@@ -441,7 +483,11 @@ const bingos = [
 }
 
 .card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   padding: 1.25rem;
+  overflow: hidden;
 }
 
 .venue-name {
@@ -467,32 +513,64 @@ const bingos = [
 }
 
 .venue-features {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
   margin-bottom: 1rem;
+  overflow-y: auto;
 }
 
-.feature-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.85rem;
-  color: #555;
-  padding: 0.25rem 0;
-  border-bottom: 1px solid #f5f5f5;
-}
-
-.feature-item:last-child {
-  border-bottom: none;
-}
-
-.feature-item strong {
-  color: #333;
+.games-section h4,
+.capacity-section h4 {
+  font-size: 1rem;
   font-weight: 600;
+  color: #333;
+  margin: 0 0 0.5rem;
 }
+
+.games-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.game-tag {
+  background: #f0f8ff;
+  color: #16a3fc;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid #16a3fc;
+}
+
+.capacity-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.facilities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.facility-badge {
+  background: #e8f5e8;
+  color: #2e7d32;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid #4caf50;
+}
+
+
 
 .venue-button {
+  flex-shrink: 0;
   display: inline-block;
   width: 100%;
   padding: 0.75rem 0;
@@ -577,6 +655,46 @@ const bingos = [
 
 .indicator:hover {
   background: #16a3fc;
+}
+
+/* Loading and Error States */
+.loading-container,
+.error-container {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-top: 2rem;
+}
+
+.loading-container p {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+}
+
+.error-container p {
+  font-size: 1.1rem;
+  color: #d32f2f;
+  margin: 0 0 1rem;
+}
+
+.retry-button {
+  padding: 0.75rem 1.5rem;
+  background: #16a3fc;
+  color: white;
+  border: 1px solid #16a3fc;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-button:hover {
+  background: #0e86d4;
+  border-color: #0e86d4;
 }
 
 </style>
