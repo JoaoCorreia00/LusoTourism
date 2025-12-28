@@ -1,4 +1,4 @@
-Empreendimentos Turísticos Existentes
+-- Empreendimentos Turísticos Existentes
 
 NrRNET - Used 
 Denominacao - Used
@@ -26,7 +26,7 @@ Concelho - Used
 Distrito - Used
 SeloCleanSafe - Used
 
-Estabelecimentos de Alojamento Local
+ -- Estabelecimentos de Alojamento Local
 
 NrRNAL - Used
 Denominacao - Used
@@ -38,3 +38,34 @@ Endereco - Used
 Concelho - Used
 Distrito - Used
 SeloCleanSafe - Used
+
+-- Casinos
+
+Denominacao
+Lotacao
+Maquinas
+JogosBancados
+SalaEspetaculos
+SalaReunioesCongressos
+Restaurantes
+Bares
+Website
+Endereco
+LocalidadeCP
+Freguesia
+Concelho
+Distrito
+
+-- Bingos
+
+Denominacao
+Lotacao
+SalaEspetaculos
+Restaurantes
+Bares
+Website
+Endereco
+LocalidadeCP
+Freguesia
+Concelho
+Distrito
