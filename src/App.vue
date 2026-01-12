@@ -11,8 +11,8 @@
       <div id="Navbardiv">
         <router-link to="/accommodations">Acomodações</router-link>
         <router-link to="/casinos">Casinos</router-link>
-        <router-link to="/">Surf Spots</router-link>
-        <router-link to="/">English</router-link>
+        <!-- <router-link to="/">Surf Spots</router-link> -->
+        <!-- <router-link to="/">English</router-link> -->
       </div>
     </nav>
   </header>
