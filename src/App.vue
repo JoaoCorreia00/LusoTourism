@@ -6,7 +6,7 @@
   <header>
     <nav>
       <div id="Homediv">
-        <router-link to="/"><img src="/src/assets/Luso2.png" alt="LusoTourism Logo" /></router-link>
+        <router-link to="/"><img src="/Luso2.png" alt="LusoTourism Logo" /></router-link>
       </div>
       <div id="Navbardiv">
         <router-link to="/accommodations">Acomodações</router-link>
