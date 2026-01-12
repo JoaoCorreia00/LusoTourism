@@ -3,11 +3,11 @@ import ImageSlider from '../components/ImageSlider.vue'
 import { ref } from 'vue'
 
 const images = ref<string[]>([
-  '/src/assets/Img_slider_1.jpg',
-  '/src/assets/Img_slider_2.jpg',
-  '/src/assets/Img_slider_3.jpg',
-  '/src/assets/Img_slider_4.jpg',
-  '/src/assets/Img_slider_5.jpg',
+  '/Img_slider_1.jpg',
+  '/Img_slider_2.jpg',
+  '/Img_slider_3.jpg',
+  '/Img_slider_4.jpg',
+  '/Img_slider_5.jpg',
 ])
 </script>
 

@@ -162,7 +162,7 @@ const loadCasinos = async () => {
               <div class="items-grid">
                 <article v-for="casino in slide" class="venue-card">
                   <div class="card-image">
-                    <img :src="'/src/assets/Img_slider_1.jpg'" :alt="casino.denominacao">
+                    <img :src="'/Img_slider_1.jpg'" :alt="casino.denominacao">
                     <div class="card-overlay">
                       <div class="game-type">Casino</div>
                     </div>
@@ -223,7 +223,7 @@ const loadCasinos = async () => {
               <div class="items-grid">
                 <article v-for="bingo in slide" class="venue-card">
                   <div class="card-image">
-                    <img :src="'/src/assets/Img_slider_1.jpg'" :alt="bingo.denominacao">
+                    <img :src="'/Img_slider_1.jpg'" :alt="bingo.denominacao">
                     <div class="card-overlay">
                       <div class="game-type">Bingo</div>
                     </div>
