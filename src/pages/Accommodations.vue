@@ -25,6 +25,7 @@ const pageAccommodations = ref<'et' | 'ea'>(savedApi || 'et')
 // Filter state - cache options per API to avoid refetching (persisted in localStorage)
 const DISTRICT_CACHE_KEY = 'accommodations_districts'
 const TYPE_CACHE_KEY = 'accommodations_types'
+const COUNT_CACHE_KEY = 'accommodations_counts'
 
 const districtOptionsCache = ref<Record<'et' | 'ea', string[]>>({
   et: JSON.parse(localStorage.getItem(`${DISTRICT_CACHE_KEY}_et`) || '[]'),
@@ -35,6 +36,9 @@ const typeOptionsCache = ref<Record<'et' | 'ea', string[]>>({
   ea: JSON.parse(localStorage.getItem(`${TYPE_CACHE_KEY}_ea`) || '[]')
 })
 
+// Cache for total counts per filter combination to avoid unnecessary API calls
+const countCache = ref<Record<string, number>>(JSON.parse(localStorage.getItem(COUNT_CACHE_KEY) || '{}'))
+
 const districtOptions = computed(() => districtOptionsCache.value[pageAccommodations.value])
 const typeOptions = computed(() => typeOptionsCache.value[pageAccommodations.value])
 
@@ -42,9 +46,6 @@ const typeOptions = computed(() => typeOptionsCache.value[pageAccommodations.val
 const pageSize = ref(28) // Items per page
 const page = ref(1) // 1-based
 const total = ref<number | null>(null)
-
-// Track filter state to avoid unnecessary count fetches
-const lastFilterState = ref('')
 
 const totalPages = computed(() => {
   return total.value ? Math.max(1, Math.ceil(total.value / pageSize.value)) : null
@@ -92,12 +93,16 @@ async function loadPage(p = 1, filters = { district: selectedDistrict.value, typ
       }
     })
 
-    // Only fetch total count when filters have changed
-    const currentFilterState = JSON.stringify({ api: pageAccommodations.value, ...filters, sortBy })
-    if (currentFilterState !== lastFilterState.value) {
+    // Fetch total count only if not cached or filters changed (sortBy doesn't affect count)
+    const countKey = JSON.stringify({ api: pageAccommodations.value, district: filters.district, type: filters.type })
+    if (countCache.value[countKey] !== undefined) {
+      total.value = countCache.value[countKey]
+    } else {
       try {
-        total.value = await getAccommodationsCount(pageAccommodations.value, filters)
-        lastFilterState.value = currentFilterState
+        const count = await getAccommodationsCount(pageAccommodations.value, filters)
+        total.value = count
+        countCache.value[countKey] = count
+        localStorage.setItem(COUNT_CACHE_KEY, JSON.stringify(countCache.value))
       } catch (e) {
         console.warn('Could not get filtered total count', e)
       }
