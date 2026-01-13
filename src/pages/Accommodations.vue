@@ -72,7 +72,7 @@ async function loadPage(p = 1, filters = { district: selectedDistrict.value, typ
         id: id!,
         title: item.attributes.Denominacao,
         location: item.attributes.Concelho === item.attributes.Distrito ? item.attributes.Distrito : `${item.attributes.Concelho}, ${item.attributes.Distrito}`,
-        image: '/src/assets/accommodations/'+type!.replace("/", "")+'.jpg',
+        image: type!.replace("/", "")+'.jpg',
         type: type!.replace(/([A-Z])/g, ' $1').trim(),
       }
     })

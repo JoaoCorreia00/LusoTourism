@@ -9,6 +9,7 @@
         <router-link to="/"><img src="/Luso2.png" alt="LusoTourism Logo" /></router-link>
       </div>
       <div id="Navbardiv">
+        <router-link to="/">Inicio</router-link>
         <router-link to="/accommodations">Acomodações</router-link>
         <router-link to="/casinos">Casinos</router-link>
         <!-- <router-link to="/">Surf Spots</router-link> -->

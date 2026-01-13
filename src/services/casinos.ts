@@ -28,9 +28,13 @@ interface ApiResponse {
   }>;
 }
 
+const API_BASE = location.hostname === "localhost"
+    ? '/api'
+    : 'https://cors-anywhere.com/https://servergeo.sgeconomia.gov.pt';
+
 export async function fetchCasinos(): Promise<ApiResponse> {
 
-  const BASE = '/api/arcgis/rest/services/TDP/OpenData_Casinos/MapServer/10/query';
+  const BASE = `${API_BASE}/arcgis/rest/services/TDP/OpenData_Casinos/MapServer/10/query`;
 
   const outFields = 'Denominacao, JogosBancados, SalaEspetaculos, SalaReunioesCongressos, Restaurantes, Bares, Website, LocalidadeCP, Concelho, Distrito';
 

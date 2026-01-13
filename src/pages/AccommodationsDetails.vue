@@ -24,7 +24,7 @@ onMounted(async () => {
       accommodationDetails.value = response.features[0]!.attributes
       
       const type = api === 'et' ? accommodationDetails.value.TipologiaET : accommodationDetails.value.Modalidade
-      accommodationDetails.value.image = '/src/assets/accommodations/'+type!.replace("/", "")+'.jpg'
+      accommodationDetails.value.image = '/'+type!.replace("/", "")+'.jpg'
       accommodationDetails.value.type
     } else {
       error.value = 'Acomodação não encontrada'

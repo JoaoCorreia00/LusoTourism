@@ -16,24 +16,27 @@ interface ApiResponse {
 }
 
 //const BASE = '/api/arcgis/rest/services/TDP/OpenData_ETExistentes/MapServer/0/query'
+const API_BASE = location.hostname === "localhost"
+    ? '/api'
+    : 'https://cors-anywhere.com/https://servergeo.sgeconomia.gov.pt';
 
-const API_CONFIGS = { 
-    et: { base: '/api/arcgis/rest/services/TDP/OpenData_ETExistentes/MapServer/0/query', 
-        fields: { 
-            id: 'NrRNET', name: 'Denominacao', type: 'TipologiaET', 
+const API_CONFIGS = {
+    et: { base: `${API_BASE}/arcgis/rest/services/TDP/OpenData_ETExistentes/MapServer/0/query`,
+        fields: {
+            id: 'NrRNET', name: 'Denominacao', type: 'TipologiaET',
             municipality: 'Concelho', district: 'Distrito', address: 'Endereco',
-            email: 'Email', selo: 'SeloCleanSafe', dateOpening: 'DataTituloValAbert', 
+            email: 'Email', selo: 'SeloCleanSafe', dateOpening: 'DataTituloValAbert',
             category: 'Categoria', NumUni: 'NrUnidAloj', NumBed: 'NrCamasFixas',
-            NumRoom: 'NrQuartos', NumSuits: 'NrSuites', NumApa: 'NrApart', 
+            NumRoom: 'NrQuartos', NumSuits: 'NrSuites', NumApa: 'NrApart',
             NumResidences: 'NrMoradias', NumCamp: 'NrCampistas', CT: 'IntegraCT',
             DesignationCT: 'DesignacaoCT', Golf: 'CampoGolfe', Meeting: 'SalasReunioes',
             NumMeeting: 'CapacSalasReunioes', Spa: 'SPA', Other: 'OutrosEquip', Web: 'Website'} },
-    ea: { base: '/api/arcgis/rest/services/TDP/OpenData_AL/MapServer/6/query', 
-        fields: { 
-            id: 'NrRNAL', name: 'Denominacao', type: 'Modalidade', 
-            municipality: 'Concelho', district: 'Distrito', address: 'Endereco', 
-            email: 'Email', selo: 'SeloCleanSafe', dateOpening: 'DataAberturaPublico', 
-            Utents: 'NrUtentes'} } 
+    ea: { base: `${API_BASE}/arcgis/rest/services/TDP/OpenData_AL/MapServer/6/query`,
+        fields: {
+            id: 'NrRNAL', name: 'Denominacao', type: 'Modalidade',
+            municipality: 'Concelho', district: 'Distrito', address: 'Endereco',
+            email: 'Email', selo: 'SeloCleanSafe', dateOpening: 'DataAberturaPublico',
+            Utents: 'NrUtentes'} }
 };
 
 /* Fetch a page of accommodations using ArcGIS pagination parameters
