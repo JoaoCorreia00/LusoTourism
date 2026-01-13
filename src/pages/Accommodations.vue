@@ -22,14 +22,29 @@ const selectedSort = ref('')
 const savedApi = localStorage.getItem('selectedApi') as 'et' | 'ea' | null
 const pageAccommodations = ref<'et' | 'ea'>(savedApi || 'et')
 
-// Filter state
-const districtOptions = ref<string[]>([])
-const typeOptions = ref<string[]>([])
+// Filter state - cache options per API to avoid refetching (persisted in localStorage)
+const DISTRICT_CACHE_KEY = 'accommodations_districts'
+const TYPE_CACHE_KEY = 'accommodations_types'
+
+const districtOptionsCache = ref<Record<'et' | 'ea', string[]>>({
+  et: JSON.parse(localStorage.getItem(`${DISTRICT_CACHE_KEY}_et`) || '[]'),
+  ea: JSON.parse(localStorage.getItem(`${DISTRICT_CACHE_KEY}_ea`) || '[]')
+})
+const typeOptionsCache = ref<Record<'et' | 'ea', string[]>>({
+  et: JSON.parse(localStorage.getItem(`${TYPE_CACHE_KEY}_et`) || '[]'),
+  ea: JSON.parse(localStorage.getItem(`${TYPE_CACHE_KEY}_ea`) || '[]')
+})
+
+const districtOptions = computed(() => districtOptionsCache.value[pageAccommodations.value])
+const typeOptions = computed(() => typeOptionsCache.value[pageAccommodations.value])
 
 // pagination state
 const pageSize = ref(28) // Items per page
 const page = ref(1) // 1-based
 const total = ref<number | null>(null)
+
+// Track filter state to avoid unnecessary count fetches
+const lastFilterState = ref('')
 
 const totalPages = computed(() => {
   return total.value ? Math.max(1, Math.ceil(total.value / pageSize.value)) : null
@@ -77,11 +92,15 @@ async function loadPage(p = 1, filters = { district: selectedDistrict.value, typ
       }
     })
 
-    // Always re-fetch total count with current filters
-    try {
-      total.value = await getAccommodationsCount(pageAccommodations.value, filters)
-    } catch (e) {
-      console.warn('Could not get filtered total count', e)
+    // Only fetch total count when filters have changed
+    const currentFilterState = JSON.stringify({ api: pageAccommodations.value, ...filters, sortBy })
+    if (currentFilterState !== lastFilterState.value) {
+      try {
+        total.value = await getAccommodationsCount(pageAccommodations.value, filters)
+        lastFilterState.value = currentFilterState
+      } catch (e) {
+        console.warn('Could not get filtered total count', e)
+      }
     }
 
     page.value = p
@@ -92,17 +111,29 @@ async function loadPage(p = 1, filters = { district: selectedDistrict.value, typ
   }
 }
 
+async function loadFilterOptions(api: 'et' | 'ea') {
+  if (districtOptionsCache.value[api].length === 0) {
+    try {
+      const districts = await getUniqueDistricts(api)
+      districtOptionsCache.value[api] = districts
+      localStorage.setItem(`${DISTRICT_CACHE_KEY}_${api}`, JSON.stringify(districts))
+    } catch (error) {
+      console.error('Failed to fetch district options:', error)
+    }
+  }
+  if (typeOptionsCache.value[api].length === 0) {
+    try {
+      const types = await getUniqueTypes(api)
+      typeOptionsCache.value[api] = types
+      localStorage.setItem(`${TYPE_CACHE_KEY}_${api}`, JSON.stringify(types))
+    } catch (error) {
+      console.error('Failed to fetch type options:', error)
+    }
+  }
+}
+
 onMounted(async () => {
-  try {
-    districtOptions.value = await getUniqueDistricts(pageAccommodations.value)
-  } catch (error) {
-    console.error('Failed to fetch district options:', error)
-  }
-  try {
-    typeOptions.value = await getUniqueTypes(pageAccommodations.value)
-  } catch (error) {
-    console.error('Failed to fetch type options:', error)
-  }
+  await loadFilterOptions(pageAccommodations.value)
   loadPage(1)
 })
 
@@ -120,12 +151,7 @@ function clearFilters() {
 async function switchApi(x: 'et' | 'ea') {
   pageAccommodations.value = x;
   localStorage.setItem('selectedApi', x);
-  try {
-    districtOptions.value = await getUniqueDistricts(x);
-    typeOptions.value = await getUniqueTypes(x);
-  } catch (error) {
-    console.error('Failed to fetch filter options for new API:', error);
-  }
+  await loadFilterOptions(x);
   clearFilters();
 }
 
