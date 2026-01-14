@@ -27,10 +27,10 @@ onMounted(async () => {
       accommodationDetails.value.image = '/LusoTourism/'+type!.replace("/", "")+'.jpg'
       accommodationDetails.value.type
     } else {
-      error.value = 'Acomodação não encontrada'
+      error.value = 'Alojamento não encontrado'
     }
   } catch (err) {
-    error.value = 'Erro ao carregar os detalhes da acomodação'
+    error.value = 'Erro ao carregar os detalhes do alojamento'
     console.error('Error fetching accommodation details:', err)
   } finally {
     loading.value = false
@@ -60,7 +60,7 @@ const goBack = () => {
       <div class="pageLink">
         <router-link to="/">Inicio</router-link>
         <p>/</p>
-        <router-link to="/accommodations">Acomodações</router-link>
+        <router-link to="/accommodations">Alojamentos</router-link>
         <p>/</p>
         <h1>{{ accommodationDetails?.Denominacao || 'A carregar...' }}</h1>
       </div>
@@ -68,7 +68,7 @@ const goBack = () => {
     </header>
 
     <div class="loading-container" v-if="loading">
-      <div class="loading-spinner">A carregar acomodação...</div>
+      <div class="loading-spinner">A carregar alojamento...</div>
     </div>
     <div class="error-container" v-else-if="error">
       <div class="error-message">{{ error }}</div>

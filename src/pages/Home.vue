@@ -15,15 +15,15 @@ const images = ref<string[]>([
   <main>
     <div class="page">
       <div class="left-content">
-        <h1>Welcome to LusoTourism</h1>
-        <p class="subtitle">Discover Portugal's Hidden Treasures</p>
+        <h1>Bem-vindo ao LusoTourism</h1>
+        <p class="subtitle">Descubra os Tesouros Escondidos de Portugal</p>
         <p class="description">
-          Experience the rich culture, stunning landscapes, and warm hospitality of Portugal. 
-          From historic cities to pristine beaches, let us guide you through an unforgettable journey.
+          Experimente a rica cultura, paisagens deslumbrantes e hospitalidade calorosa de Portugal.
+          Desde cidades históricas até praias imaculadas, deixe-nos guiá-lo através de uma jornada inesquecível.
         </p>
         <div class="cta-buttons">
-          <button class="explore-btn">Explore Now</button>
-          <button class="learn-btn">Learn More</button>
+          <router-link to="/accommodations" class="explore-btn">Explorar Alojamentos</router-link>
+          <router-link to="/casinos" class="learn-btn">Ver Casinos & Bingos</router-link>
         </div>
       </div>
       <div class="right-content">
@@ -89,25 +89,32 @@ img {
   gap: 1rem;
   margin-top: 1rem;
 }
-button {
+.explore-btn {
   padding: 0.8rem 1.5rem;
   border-radius: 8px;
   font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
   transition: transform 0.2s ease;
-}
-button:hover {
-  transform: translateY(-2px);
-}
-.explore-btn {
   background-color: #16a3fc;
   color: white;
   border: none;
 }
+.explore-btn:hover {
+  transform: translateY(-2px);
+}
 .learn-btn {
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease;
   background-color: transparent;
   color: #16a3fc;
   border: 2px solid #16a3fc;
+}
+.learn-btn:hover {
+  transform: translateY(-2px);
 }
 </style>

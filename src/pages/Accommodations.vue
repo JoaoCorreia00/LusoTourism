@@ -110,7 +110,7 @@ async function loadPage(p = 1, filters = { district: selectedDistrict.value, typ
 
     page.value = p
   } catch (error) {
-    console.error('Failed to fetch accommodations page:', error)
+    console.error('Failed to fetch alojamentos page:', error)
   } finally {
     loading.value = false
   }
@@ -170,7 +170,7 @@ function onView(accom: Accom) {
 <template>
   <section class="page">
     <header>
-      <div class="pageLink"><router-link to="/">Inicio</router-link><p> /</p><h1>Acomodações</h1></div>
+      <div class="pageLink"><router-link to="/">Inicio</router-link><p> /</p><h1>Alojamentos</h1></div>
       <div class="option_bar">
         <div class="grid_options">
           <button @click="switchApi('et')" :class="{ active: pageAccommodations === 'et' }" :disabled="pageAccommodations === 'et'">Empreendimentos Turísticos</button>
@@ -221,7 +221,7 @@ function onView(accom: Accom) {
     </header>
 
     <div v-if="loading" class="loading">
-      <p>A carregar acomodações...</p>
+      <p>A carregar Alojamentos...</p>
     </div>
 
     <div v-else-if="accommodations.length == 0" class="loading">
