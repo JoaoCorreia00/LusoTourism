@@ -221,11 +221,12 @@ function onView(accom: Accom) {
     </header>
 
     <div v-if="loading" class="loading">
-      <p>Loading accommodations...</p>
+      <p>A carregar acomodações...</p>
     </div>
 
     <div v-else-if="accommodations.length == 0" class="loading">
-      <p>No items found</p>
+      <p>Nenhum item encontrado</p>
+      <button @click="loadPage(1)" class="retry-button">Tentar Novamente</button>
     </div>
 
     <div v-else class="grid">
@@ -456,4 +457,20 @@ header {
   cursor: default;
 }
 .ellipsis { padding: 0 .5rem; color: #666 }
+
+.retry-button {
+  padding: 0.75rem 1.5rem;
+  background: #16a3fc;
+  color: white;
+  border: 1px solid #16a3fc;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-button:hover {
+  background: #0e86d4;
+  border-color: #0e86d4;
+}
 </style>

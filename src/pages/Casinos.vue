@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { fetchCasinos, type Casino } from '../services/casinos'
+import { fetchBingos, type Bingo } from '../services/casinos'
 
 // Utility function to chunk arrays
 function chunkArray<T>(array: T[], size: number): T[][] {
@@ -62,6 +63,7 @@ const updateSlides = () => {
 onMounted(async () => {
   window.addEventListener('resize', updateSlides)
   await loadCasinos()
+  await loadBingos()
 })
 
 onBeforeUnmount(() => {
@@ -71,15 +73,13 @@ onBeforeUnmount(() => {
 
 // Reactive data
 const casinos = ref<Casino[]>([])
-const bingos = ref([
-  { id: 1, denominacao: 'Central Bingo', lotacao: 200, salaEspetaculos: true, restaurantes: 1, bares: 0, website: 'https://bingo1.com', endereco: 'Rua 4, 4000', localidadeCP: 'Lisboa, 4000-004', freguesia: 'Misericórdia', concelho: 'Lisboa', distrito: 'Lisboa' },
-  { id: 2, denominacao: 'Porto Bingo', lotacao: 150, salaEspetaculos: false, restaurantes: 0, bares: 1, website: 'https://bingo2.com', endereco: 'Av 5, 5000', localidadeCP: 'Porto, 5000-005', freguesia: 'Paranhos', concelho: 'Porto', distrito: 'Porto' },
-  { id: 3, denominacao: 'Algarve Bingo', lotacao: 100, salaEspetaculos: true, restaurantes: 1, bares: 1, website: 'https://bingo3.com', endereco: 'Praça 6, 6000', localidadeCP: 'Faro, 6000-006', freguesia: 'Monte Gordo', concelho: 'Monte Gordo', distrito: 'Faro' }
-])
+const bingos = ref<Bingo[]>([])
 
 // Loading and error states
 const loading = ref(false)
+const loadingBingo = ref(false)
 const error = ref<string | null>(null)
+const errorBingo = ref<string | null>(null)
 
 // Fetch casinos data
 const loadCasinos = async () => {
@@ -94,10 +94,11 @@ const loadCasinos = async () => {
       salaReunioesCongressos: item.attributes.SalaReunioesCongressos,
       restaurantes: item.attributes.Restaurantes,
       bares: item.attributes.Bares,
-      website: item.attributes.Website.startsWith('http') ? item.attributes.Website : `https://${item.attributes.Website}`,
+      website: item.attributes.Website ? (item.attributes.Website.startsWith('http') ? item.attributes.Website : `https://${item.attributes.Website}`) : '',
       localidadeCP: item.attributes.LocalidadeCP,
       concelho: item.attributes.Concelho,
       distrito: item.attributes.Distrito,
+      codigoPostal: item.attributes.CodigoPostal,
     }))
   } catch (err) {
     error.value = 'Failed to load casinos data'
@@ -106,6 +107,32 @@ const loadCasinos = async () => {
     loading.value = false
   }
 }
+
+const loadBingos = async () => {
+  loadingBingo.value = true
+  errorBingo.value = null
+  try {
+    const resp = await fetchBingos()
+    bingos.value = resp.features.map(item => ({
+      denominacao: item.attributes.Denominacao,
+      lotacao: item.attributes.Lotacao,
+      salaEspetaculos: item.attributes.SalaEspetaculos,
+      restaurantes: item.attributes.Restaurantes,
+      bares: item.attributes.Bares,
+      website: item.attributes.Website ? (item.attributes.Website.startsWith('http') ? item.attributes.Website : `https://${item.attributes.Website}`) : '',
+      localidadeCP: item.attributes.LocalidadeCP,
+      concelho: item.attributes.Concelho,
+      distrito: item.attributes.Distrito,
+      codigoPostal: item.attributes.CodigoPostal,
+    }))
+  } catch (err) {
+    errorBingo.value = 'Failed to load bingos data'
+    console.error('Error loading bingos:', err)
+  } finally {
+    loadingBingo.value = false
+  }
+}
+
 </script>
 
 <template>
@@ -145,13 +172,13 @@ const loadCasinos = async () => {
 
       <!-- Loading State -->
       <div v-if="loading" class="loading-container">
-        <p>Loading casinos...</p>
+        <p>A carregar casinos...</p>
       </div>
 
       <!-- Error State -->
       <div v-else-if="error" class="error-container">
         <p>{{ error }}</p>
-        <button @click="loadCasinos" class="retry-button">Try Again</button>
+        <button @click="loadCasinos" class="retry-button">Tentar Novamente</button>
       </div>
 
       <!-- Casinos Content -->
@@ -162,7 +189,7 @@ const loadCasinos = async () => {
               <div class="items-grid">
                 <article v-for="casino in slide" class="venue-card">
                   <div class="card-image">
-                    <img :src="'Img_slider_1.jpg'" :alt="casino.denominacao">
+                    <img :src="casino.codigoPostal+'.jpg'" :alt="casino.denominacao">
                     <div class="card-overlay">
                       <div class="game-type">Casino</div>
                     </div>
@@ -182,10 +209,10 @@ const loadCasinos = async () => {
                         </div>
                       </div>
                       <div class="facilities">
-                        <div v-if="casino.salaEspetaculos" class="facility-badge">Sala de Espetáculos</div>
-                        <div v-if="casino.salaReunioesCongressos" class="facility-badge">Sala de Reuniões</div>
-                        <div v-if="casino.restaurantes" class="facility-badge">Restaurantes</div>
-                        <div v-if="casino.bares" class="facility-badge">Bares</div>
+                        <div v-if="casino.salaEspetaculos == 'Sim'" class="facility-badge">Sala de Espetáculos</div>
+                        <div v-if="casino.salaReunioesCongressos == 'Sim'" class="facility-badge">Sala de Reuniões</div>
+                        <div v-if="casino.restaurantes == 'Sim'" class="facility-badge">Restaurantes</div>
+                        <div v-if="casino.bares == 'Sim'" class="facility-badge">Bares</div>
                       </div>
                     </div>
                     <a :href="casino.website" target="_blank" class="venue-button">Ver Detalhes</a>
@@ -216,6 +243,17 @@ const loadCasinos = async () => {
         <p class="section-description">Encontre salas de bingo tradicionais e locais de jogos modernos</p>
       </header>
 
+      <!-- Loading State -->
+      <div v-if="loadingBingo" class="loading-container">
+        <p>A carregar bingos...</p>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="errorBingo" class="error-container">
+        <p>{{ errorBingo }}</p>
+        <button @click="loadBingos" class="retry-button">Tentar Novamente</button>
+      </div>
+
       <div class="carousel-wrapper">
         <div class="carousel-container" ref="bingoContainer">
           <div class="carousel" :style="{ transform: `translateX(-${bingoCurrentSlide * 100}%)` }">
@@ -223,6 +261,7 @@ const loadCasinos = async () => {
               <div class="items-grid">
                 <article v-for="bingo in slide" class="venue-card">
                   <div class="card-image">
+                    <img :src="''+bingo.codigoPostal+'.jpg'" :alt="bingo.denominacao">
                     <img :src="'Img_slider_1.jpg'" :alt="bingo.denominacao">
                     <div class="card-overlay">
                       <div class="game-type">Bingo</div>
@@ -232,20 +271,22 @@ const loadCasinos = async () => {
                     <h3 class="venue-name">{{ bingo.denominacao }}</h3>
                     <div class="venue-location">
                       <span class="location-icon">📍</span>
-                      <span>{{ bingo.concelho }}, {{ bingo.distrito }}</span>
+                      <span v-if="bingo.concelho">{{ bingo.concelho }}, {{ bingo.distrito }}</span>
+                      <span v-else>{{ bingo.localidadeCP }}</span>
                     </div>
                     <div class="venue-features">
                       <div class="capacity-section">
-                        <h4>Capacidade</h4>
-                        <span class="capacity-value">{{ bingo.lotacao }} pessoas</span>
+                        <h4 v-if="bingo.lotacao">Capacidade: <span class="capacity-value">{{ bingo.lotacao }} pessoas</span></h4>
                       </div>
+                      <p>Instalações Disponíveis</p>
                       <div class="facilities">
-                        <div v-if="bingo.salaEspetaculos" class="facility-badge">Sala de Espetáculos</div>
-                        <div v-if="bingo.restaurantes" class="facility-badge">Restaurantes</div>
-                        <div v-if="bingo.bares" class="facility-badge">Bares</div>
+                        <div v-if="bingo.salaEspetaculos == 'Sim'" class="facility-badge">Sala de Espetáculos</div>
+                        <div v-if="bingo.restaurantes == 'Sim'" class="facility-badge">Restaurantes</div>
+                        <div v-if="bingo.bares == 'Sim'" class="facility-badge">Bares</div>
                       </div>
                     </div>
-                    <a :href="bingo.website" target="_blank" class="venue-button">Ver Detalhes</a>
+                    <a v-if="bingo.website" :href="bingo.website" target="_blank" class="venue-button">Ver Detalhes</a>
+                    <a v-else target="_blank" class="venue-button">Não Disponível</a>
                   </div>
                 </article>
               </div>
@@ -456,8 +497,9 @@ const loadCasinos = async () => {
 
 .card-image img {
   width: 100%;
-  height: 100%;
+  height: 200px;
   object-fit: cover;
+  display: block;
   transition: transform 0.4s ease;
 }
 
@@ -527,6 +569,19 @@ const loadCasinos = async () => {
   font-weight: 600;
   color: #333;
   margin: 0 0 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.venue-features p {
+  margin: 0 0 -0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .games-tags {

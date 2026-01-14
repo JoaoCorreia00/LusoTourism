@@ -55,6 +55,7 @@ LocalidadeCP
 Freguesia
 Concelho
 Distrito
+CodigoPostal
 
 -- Bingos
 
@@ -69,3 +70,4 @@ LocalidadeCP
 Freguesia
 Concelho
 Distrito
+CodigoPostal

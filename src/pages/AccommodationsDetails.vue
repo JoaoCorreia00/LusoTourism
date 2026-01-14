@@ -24,7 +24,7 @@ onMounted(async () => {
       accommodationDetails.value = response.features[0]!.attributes
       
       const type = api === 'et' ? accommodationDetails.value.TipologiaET : accommodationDetails.value.Modalidade
-      accommodationDetails.value.image = '/'+type!.replace("/", "")+'.jpg'
+      accommodationDetails.value.image = '/LusoTourism/'+type!.replace("/", "")+'.jpg'
       accommodationDetails.value.type
     } else {
       error.value = 'Acomodação não encontrada'
@@ -62,13 +62,13 @@ const goBack = () => {
         <p>/</p>
         <router-link to="/accommodations">Acomodações</router-link>
         <p>/</p>
-        <h1>{{ accommodationDetails?.Denominacao || 'Carregando...' }}</h1>
+        <h1>{{ accommodationDetails?.Denominacao || 'A carregar...' }}</h1>
       </div>
       <button class="back-btn" @click="goBack">← Voltar</button>
     </header>
 
     <div class="loading-container" v-if="loading">
-      <div class="loading-spinner">Carregando acomodação...</div>
+      <div class="loading-spinner">A carregar acomodação...</div>
     </div>
     <div class="error-container" v-else-if="error">
       <div class="error-message">{{ error }}</div>
