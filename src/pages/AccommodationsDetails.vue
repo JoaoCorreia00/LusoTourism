@@ -57,7 +57,7 @@ const goBack = () => {
 <template>
   <section class="page">
     <header>
-      <div class="pageLink">
+      <div class="pageLink" id="heroLocal">
         <router-link to="/">Inicio</router-link>
         <p>/</p>
         <router-link to="/accommodations">Alojamentos</router-link>
@@ -485,6 +485,83 @@ header {
 
   .back-btn {
     width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    height: 290px;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-overlay {
+    padding: 1.5rem;
+  }
+
+  .hero-overlay h2 {
+    font-size: 1.5rem;
+  }
+
+  .hero-overlay .location {
+    font-size: 0.9rem;
+  }
+
+  #heroLocal{
+    display: none;
+  }
+
+  header {
+    width: 95%;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .pageLink h1 {
+    font-size: 1.2rem;
+  }
+
+  .pageLink p, .pageLink a {
+    font-size: 1rem;
+    padding: 0 0.25rem;
+  }
+
+  .details-container {
+    width: 95%;
+    padding-bottom: 2rem;
+  }
+
+  .info-card {
+    padding: 1rem;
+  }
+
+  .info-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    padding: 0.5rem 0;
+  }
+
+  .label {
+    font-size: 0.9rem;
+  }
+
+  .value {
+    font-size: 0.95rem;
+    text-align: left;
+  }
+
+  .stars {
+    justify-content: flex-start;
+  }
+
+  .back-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
   }
 }
 

@@ -16,6 +16,16 @@ const bingoCurrentSlide = ref(0)
 const casinoContainer = ref<HTMLElement>()
 const bingoContainer = ref<HTMLElement>()
 
+// Drag state
+const casinoIsDragging = ref(false)
+const bingoIsDragging = ref(false)
+const casinoStartX = ref(0)
+const bingoStartX = ref(0)
+
+const showFilters = ref(true)
+const isDesktop = ref(true)
+const isMobile = ref(false)
+
 // Responsive cards per slide
 const casinoSlides = computed(() => chunkArray(casinos.value, getCardsPerSlide(casinoContainer.value)))
 const bingoSlides = computed(() => chunkArray(bingos.value, getCardsPerSlide(bingoContainer.value)))
@@ -38,6 +48,8 @@ const bingoPrev = () => {
 }
 
 function getCardsPerSlide(container: HTMLElement | undefined): number {
+  if (isMobile.value) return 1
+
   if (!container) return 4 // fallback
 
   const containerWidth = container.clientWidth - 60
@@ -46,6 +58,54 @@ function getCardsPerSlide(container: HTMLElement | undefined): number {
 
   if(calculated < 1) return 1
   return calculated
+}
+
+function getClientX(e: MouseEvent | TouchEvent): number {
+  if (e instanceof MouseEvent) return e.clientX
+  const touch = e.touches[0] || (e as TouchEvent).changedTouches[0]
+  return touch ? touch.clientX : 0
+}
+
+const casinoStartDrag = (e: MouseEvent | TouchEvent) => {
+  casinoIsDragging.value = true
+  casinoStartX.value = getClientX(e)
+}
+
+const casinoDrag = (e: MouseEvent | TouchEvent) => {
+  if (!casinoIsDragging.value) return
+  e.preventDefault()
+}
+
+const casinoEndDrag = (e: MouseEvent | TouchEvent) => {
+  if (!casinoIsDragging.value) return
+  const endX = getClientX(e)
+  const delta = casinoStartX.value - endX
+  if (Math.abs(delta) > 50) {
+    if (delta > 0) casinoNext()
+    else casinoPrev()
+  }
+  casinoIsDragging.value = false
+}
+
+const bingoStartDrag = (e: MouseEvent | TouchEvent) => {
+  bingoIsDragging.value = true
+  bingoStartX.value = getClientX(e)
+}
+
+const bingoDrag = (e: MouseEvent | TouchEvent) => {
+  if (!bingoIsDragging.value) return
+  e.preventDefault()
+}
+
+const bingoEndDrag = (e: MouseEvent | TouchEvent) => {
+  if (!bingoIsDragging.value) return
+  const endX = getClientX(e)
+  const delta = bingoStartX.value - endX
+  if (Math.abs(delta) > 50) {
+    if (delta > 0) bingoNext()
+    else bingoPrev()
+  }
+  bingoIsDragging.value = false
 }
 
 // Update slides on resize
@@ -61,6 +121,9 @@ const updateSlides = () => {
 }
 
 onMounted(async () => {
+  isMobile.value = window.innerWidth < 768
+  isDesktop.value = window.innerWidth >= 768
+  showFilters.value = isDesktop.value
   window.addEventListener('resize', updateSlides)
   await loadCasinos()
   await loadBingos()
@@ -183,7 +246,7 @@ const loadBingos = async () => {
 
       <!-- Casinos Content -->
       <div v-else class="carousel-wrapper">
-        <div class="carousel-container" ref="casinoContainer">
+        <div class="carousel-container" ref="casinoContainer" @mousedown="casinoStartDrag" @touchstart="casinoStartDrag" @mousemove="casinoDrag" @touchmove="casinoDrag" @mouseup="casinoEndDrag" @touchend="casinoEndDrag" :style="{ cursor: casinoIsDragging ? 'grabbing' : 'grab' }">
           <div class="carousel" :style="{ transform: `translateX(-${casinoCurrentSlide * 100}%)` }">
             <div v-for="(slide, slideIndex) in casinoSlides" :key="slideIndex" class="slide">
               <div class="items-grid">
@@ -255,7 +318,7 @@ const loadBingos = async () => {
       </div>
 
       <div class="carousel-wrapper">
-        <div class="carousel-container" ref="bingoContainer">
+        <div class="carousel-container" ref="bingoContainer" @mousedown="bingoStartDrag" @touchstart="bingoStartDrag" @mousemove="bingoDrag" @touchmove="bingoDrag" @mouseup="bingoEndDrag" @touchend="bingoEndDrag" :style="{ cursor: bingoIsDragging ? 'grabbing' : 'grab' }">
           <div class="carousel" :style="{ transform: `translateX(-${bingoCurrentSlide * 100}%)` }">
             <div v-for="(slide, slideIndex) in bingoSlides" :key="slideIndex" class="slide">
               <div class="items-grid">
@@ -285,7 +348,7 @@ const loadBingos = async () => {
                         <div v-if="bingo.bares == 'Sim'" class="facility-badge">Bares</div>
                       </div>
                     </div>
-                    <a v-if="bingo.website" :href="bingo.website" target="_blank" class="venue-button">Ver Detalhes</a>
+                    <a v-if="bingo.website && bingo.website !== 'https://não possui site'" :href="bingo.website" target="_blank" class="venue-button">Ver Detalhes</a>
                     <a v-else target="_blank" class="venue-button">Não Disponível</a>
                   </div>
                 </article>
@@ -446,7 +509,7 @@ const loadBingos = async () => {
   background: white;
   border: 1px solid #e0e0e0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  padding: 0 25px;
+  padding: 0 10px;
 }
 
 .carousel {
@@ -750,6 +813,199 @@ const loadBingos = async () => {
 .retry-button:hover {
   background: #0e86d4;
   border-color: #0e86d4;
+}
+
+@media (max-width: 768px) {
+
+  .pageLink {
+    width: 95%;
+    padding: 0.75rem;
+    margin-bottom: -0.25rem;
+  }
+
+  .pageLink h1 {
+    font-size: 1.2rem;
+  }
+
+  .pageLink p, .pageLink a {
+    font-size: 1rem;
+  }
+
+  .hero {
+    padding: 3rem 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .hero-stats {
+    gap: 2rem;
+  }
+
+  .venue-section {
+    width: 90%;
+    margin: 0 auto 3rem;
+  }
+
+  .section-title {
+    font-size: 1.75rem;
+  }
+
+  .section-description {
+    font-size: 1rem;
+  }
+
+  .venue-card {
+    flex: 0 0 320px;
+    height: 500px;
+  }
+
+  .card-image {
+    height: 180px;
+  }
+
+  .card-image img {
+    height: 180px;
+  }
+
+  .venue-name {
+    font-size: 1.1rem;
+  }
+
+  .venue-location {
+    font-size: 0.85rem;
+  }
+
+  .venue-features {
+    gap: 0.75rem;
+  }
+
+  .games-section h4,
+  .capacity-section h4,
+  .venue-features p {
+    font-size: 0.9rem;
+  }
+
+  .games-tags {
+    gap: 0.4rem;
+  }
+
+  .game-tag,
+  .facility-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  .nav-btn {
+    display: none;
+  }
+  
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 2rem 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-title {
+    font-size: 1.8rem;
+  }
+
+  .hero-stats {
+    gap: 1.5rem;
+  }
+
+  .stat {
+    padding: 1rem;
+  }
+
+  .stat-number {
+    font-size: 2rem;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+  }
+
+  .venue-section {
+    width: 95%;
+    margin: 0 auto 2rem;
+    padding-bottom: 1rem;
+  }
+
+  .section-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+  }
+
+  .section-description {
+    font-size: 0.9rem;
+  }
+
+  .venue-card {
+    flex: 0 0 300px;
+    height: 450px;
+  }
+
+  .card-image {
+    height: 150px;
+  }
+
+  .card-image img {
+    height: 150px;
+  }
+
+  .card-content {
+    padding: 1rem;
+  }
+
+  .venue-name {
+    font-size: 1rem;
+  }
+
+  .venue-location {
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .venue-features {
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .games-section h4,
+  .capacity-section h4,
+  .venue-features p {
+    font-size: 0.85rem;
+  }
+
+  .capacity-value {
+    font-size: 1rem;
+  }
+
+  .venue-button {
+    padding: 0.6rem 0;
+    font-size: 0.9rem;
+  }
+
+  .carousel-container {
+    width: 95%;
+    padding: 0 10px;
+  }
+
+  .slide {
+    padding: 1.5rem 0;
+  }
+
+  .items-grid {
+    gap: 1rem;
+  }
 }
 
 </style>

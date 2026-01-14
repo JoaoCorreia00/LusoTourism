@@ -9,6 +9,8 @@ const images = ref<string[]>([
   'Img_slider_4.jpg',
   'Img_slider_5.jpg',
 ])
+
+//stop point
 </script>
 
 <template>
@@ -36,12 +38,12 @@ const images = ref<string[]>([
 <style scoped>
 main {
   width: 100%;
-  height: 900px;
+  min-height: 900px;
   background-color: #42b98300;
   display: flex;
   justify-content: center;
   gap: 2rem;
-  
+
 }
 .page{
   width: 94%;
@@ -99,6 +101,7 @@ img {
   background-color: #16a3fc;
   color: white;
   border: none;
+  text-decoration: none;
 }
 .explore-btn:hover {
   transform: translateY(-2px);
@@ -113,8 +116,55 @@ img {
   background-color: transparent;
   color: #16a3fc;
   border: 2px solid #16a3fc;
+  text-decoration: none;
 }
 .learn-btn:hover {
   transform: translateY(-2px);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  main {
+    min-height: auto;
+    padding: 1rem 0;
+    gap: 1rem;
+  }
+  .page {
+    flex-direction: column;
+    width: 100%;
+    padding: 0 1rem;
+  }
+  .left-content {
+    flex: none;
+    padding: 1rem;
+    text-align: center;
+    gap: 1rem;
+    order: 1;
+    margin-top: -1.5rem;
+  }
+  .right-content {
+    flex: none;
+    height: 200px;
+    order: -1;
+  }
+  h1 {
+    font-size: 2rem;
+  }
+  .subtitle {
+    font-size: 1.2rem;
+  }
+  .description {
+    font-size: 1rem;
+  }
+  .cta-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .explore-btn, .learn-btn {
+    width: 100%;
+    max-width: 300px;
+    font-size: 1rem;
+  }
 }
 </style>

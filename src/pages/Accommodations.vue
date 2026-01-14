@@ -21,6 +21,8 @@ const selectedType = ref('')
 const selectedSort = ref('')
 const savedApi = localStorage.getItem('selectedApi') as 'et' | 'ea' | null
 const pageAccommodations = ref<'et' | 'ea'>(savedApi || 'et')
+const showFilters = ref(true)
+const isDesktop = ref(true)
 
 // Filter state - cache options per API to avoid refetching (persisted in localStorage)
 const DISTRICT_CACHE_KEY = 'accommodations_districts'
@@ -138,6 +140,8 @@ async function loadFilterOptions(api: 'et' | 'ea') {
 }
 
 onMounted(async () => {
+  isDesktop.value = window.innerWidth >= 768
+  showFilters.value = isDesktop.value
   await loadFilterOptions(pageAccommodations.value)
   loadPage(1)
 })
@@ -175,8 +179,13 @@ function onView(accom: Accom) {
         <div class="grid_options">
           <button @click="switchApi('et')" :class="{ active: pageAccommodations === 'et' }" :disabled="pageAccommodations === 'et'">Empreendimentos Turísticos</button>
           <button @click="switchApi('ea')" :class="{ active: pageAccommodations === 'ea' }" :disabled="pageAccommodations === 'ea'">Estabelecimentos de Alojamento Local</button>
+          <select v-model="pageAccommodations" @change="switchApi(pageAccommodations)" class="api-select">
+            <option value="et">Empreendimentos Turísticos</option>
+            <option value="ea">Estabelecimentos de Alojamento Local</option>
+          </select>
         </div>
-        <div class="filters">
+        <button @click="showFilters = !showFilters" class="filter-toggle">⚙️ Filtros</button>
+        <div class="filters" v-show="showFilters">
           <label>
             Item por página:
             <select v-model="pageSize" @change="onFilterChange">
@@ -238,7 +247,7 @@ function onView(accom: Accom) {
       />
     </div>
 
-    <div class="pagination" v-if="totalPages">
+    <div class="pagination" v-if="totalPages && isDesktop">
       <button class="page-btn" @click="loadPage(1)" :disabled="page===1">«</button>
       <button class="page-btn" @click="loadPage(page-1)" :disabled="page===1">‹</button>
 
@@ -254,6 +263,12 @@ function onView(accom: Accom) {
 
       <button class="page-btn" @click="loadPage(page+1)" :disabled="totalPages ? page>=totalPages : false">›</button>
       <button class="page-btn" @click="loadPage(totalPages ?? page)" :disabled="totalPages ? page>=totalPages : false">»</button>
+    </div>
+
+    <div class="pagination mobile" v-if="totalPages && !isDesktop">
+      <button class="page-btn" @click="loadPage(page-1)" :disabled="page===1">‹</button>
+      <span class="current-page">{{ page }}</span>
+      <button class="page-btn" @click="loadPage(page+1)" :disabled="totalPages ? page>=totalPages : false">›</button>
     </div>
   </section>
 </template>
@@ -331,6 +346,30 @@ header {
 .grid_options button:disabled{
   cursor: not-allowed;
 }
+.api-select {
+  display: none;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  background: white;
+  font-size: 0.9rem;
+  width: 100%;
+}
+.filter-toggle {
+  display: none;
+  background: #16a3fc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.filter-toggle:hover {
+  background: #1385d4;
+}
 .filters {
   width: 100%;
   display: flex;
@@ -398,11 +437,7 @@ header {
     width: 90%;
   }
 
-  header {
-    width: 90%;
-    gap: 1rem;
-  }
-
+  
   .option_bar {
     flex-direction: column;
     align-items: stretch;
@@ -413,14 +448,86 @@ header {
   }
 
   .grid_options button {
-    flex: 1;
+    display: none;
+  }
+
+  .api-select {
+    display: block;
+  }
+
+  .filter-toggle {
+    display: block;
   }
 
   .filters {
     justify-content: flex-start;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
     gap: 1rem;
     padding: 0;
+  }
+
+  .filters label {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 0;
+  }
+
+  .filters select {
+    width: 100%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr;
+    width: 95%;
+    gap: 0.75rem;
+  }
+
+  #label_type select {
+    width: 100%;
+  }
+  
+  #label_district select {
+    width: 100%;
+  }
+
+  header {
+    width: 95%;
+    padding: 0.75rem;
+    gap: 0.75rem;
+    margin-bottom: -0.25rem;
+  }
+
+  .pageLink h1 {
+    font-size: 1.2rem;
+  }
+
+  .pageLink p, .pageLink a {
+    font-size: 1rem;
+  }
+
+  .grid_options button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .filters label {
+    gap: 0.25rem;
+  }
+
+  .pagination {
+    gap: 0.25rem;
+    margin: 1rem 0 2rem;
+  }
+
+  .page-btn, .page-num {
+    padding: 2rem 0.75rem;
+    
+    min-width: 0.4rem;
   }
 }
 
